@@ -67,7 +67,8 @@ class DarknetRecognition:
         self.make_image.restype = IMAGE
 
         self.get_network_boxes = self.lib.get_network_boxes
-        self.get_network_boxes.argtypes = [c_void_p, c_int, c_int, c_float, c_float, POINTER(c_int), c_int, POINTER(c_int), c_int]
+        self.get_network_boxes.argtypes = [c_void_p, c_int, c_int, c_float, c_float, POINTER(c_int), c_int,
+                                           POINTER(c_int), c_int]
         self.get_network_boxes.restype = POINTER(DETECTION)
 
         self.make_network_boxes = self.lib.make_network_boxes
@@ -127,7 +128,8 @@ class DarknetRecognition:
         self.predict_image_letterbox.restype = POINTER(c_float)
 
         """ Init main darknet components """
-        self.net_main = self.load_net_custom(cfg_path.encode("ascii"), weight_path.encode("ascii"), 0, 1)  # batch size = 1
+        self.net_main = self.load_net_custom(cfg_path.encode("ascii"), weight_path.encode("ascii"), 0,
+                                             1)  # batch size = 1
 
     def network_width(self, net):
         return self.lib.network_width(net)
@@ -136,7 +138,7 @@ class DarknetRecognition:
         return self.lib.network_height(net)
 
     @staticmethod
-    def array_to_image(array):
+    def __array_to_image(array):
         # need to return old values to avoid python freeing memory
         array = array.transpose(2, 0, 1)
         c = array.shape[0]
@@ -147,11 +149,23 @@ class DarknetRecognition:
         image = IMAGE(w, h, c, data)
         return image, array
 
-    def predict_boxes(self, frame, classes_count, threshold=0.8, hier_threshold=0.5, nms=0.45):
+    @staticmethod
+    def to_usable(x, y, w, h):
+        w = int(w)
+        h = int(h)
+        x_coord = int(x - w / 2)
+        y_coord = int(y - h / 2)
+
+        return x_coord, y_coord, x_coord + w, y_coord + h
+
+    """ threshold is value for valid detection. hier_threshold determines how specific the result is. nms takes care of overlapping boxes """
+    def predict_boxes(self, frame, classes_count, threshold=0.45, hier_threshold=0.7, nms=0.45):
         """ Extract data from frame and convert to array """
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        rgb_frame = cv2.resize(rgb_frame, (self.lib.network_width(self.net_main), self.lib.network_height(self.net_main)), interpolation=cv2.INTER_LINEAR)
-        image, array = self.array_to_image(rgb_frame)
+        rgb_frame = cv2.resize(rgb_frame,
+                               (self.lib.network_width(self.net_main), self.lib.network_height(self.net_main)),
+                               interpolation=cv2.INTER_LINEAR)
+        image, array = self.__array_to_image(rgb_frame)
 
         """ Create pointer for later fetching """
         prediction_count = c_int(0)
@@ -162,7 +176,8 @@ class DarknetRecognition:
         letter_box = 0
         # predict_image_letterbox(net, im)
         # letter_box = 1
-        detections = self.get_network_boxes(self.net_main, rgb_frame.shape[1], rgb_frame.shape[0], threshold, hier_threshold, None, 0, pointer_prediction_count, letter_box)
+        detections = self.get_network_boxes(self.net_main, rgb_frame.shape[1], rgb_frame.shape[0], threshold,
+                                            hier_threshold, None, 0, pointer_prediction_count, letter_box)
 
         """ Get amount of predictions """
         prediction_count = pointer_prediction_count[0]
@@ -182,4 +197,3 @@ class DarknetRecognition:
         self.free_detections(detections, prediction_count)
 
         return ret
-

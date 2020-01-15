@@ -35,6 +35,10 @@ class AdvancedConeRecognition:
         self.darknet_recognition = DarknetRecognition(dll_path, cfg_path, weight_path)
         self.videoCapture = cv2.VideoCapture(0)
 
+        if self.videoCapture.isOpened():
+            self.img_w = self.videoCapture.get(cv2.CAP_PROP_FRAME_WIDTH)  # float
+            self.img_h = self.videoCapture.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float
+
     def start(self, render=False, verbose=False):
         self.running = True
 
@@ -51,19 +55,24 @@ class AdvancedConeRecognition:
             if len(detections) > 0:
                 # loop over the indexes we are keeping
                 for (clazz, probability, (x, y, w, h)) in detections:
+
+                    (x1, y1, x2, y2) = self.darknet_recognition.to_usable(x, y, w, h)
+
                     x = int(x)
                     y = int(y)
                     w = int(w)
                     h = int(h)
+
                     if verbose:
                         print(x, y, w, h, self.LABELS[clazz])
 
                     if render:
                         # draw a bounding box rectangle and label on the frame
                         color = [int(c) for c in self.COLORS[clazz]]
-                        cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
+                        cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+                        cv2.circle(frame, (x, y), 10, color, -1)
                         text = "{}: {:.4f}".format(self.LABELS[clazz], probability)
-                        cv2.putText(frame, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+                        cv2.putText(frame, text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
             if render:
                 cv2.imshow('Currently processed image', frame)
