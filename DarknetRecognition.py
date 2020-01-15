@@ -151,20 +151,17 @@ class DarknetRecognition:
 
     @staticmethod
     def to_usable(x, y, w, h):
-        w = int(w)
-        h = int(h)
-        x_coord = int(x - w / 2)
-        y_coord = int(y - h / 2)
+        x1 = int(x - w / 2.)
+        y1 = int(y - h / 2.)
+        x2 = int(x + w / 2.)
+        y2 = int(y + h / 2.)
 
-        return x_coord, y_coord, x_coord + w, y_coord + h
+        return x1, y1, x2, y2
 
     """ threshold is value for valid detection. hier_threshold determines how specific the result is. nms takes care of overlapping boxes """
     def predict_boxes(self, frame, classes_count, threshold=0.45, hier_threshold=0.7, nms=0.45):
         """ Extract data from frame and convert to array """
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        rgb_frame = cv2.resize(rgb_frame,
-                               (self.lib.network_width(self.net_main), self.lib.network_height(self.net_main)),
-                               interpolation=cv2.INTER_LINEAR)
         image, array = self.__array_to_image(rgb_frame)
 
         """ Create pointer for later fetching """

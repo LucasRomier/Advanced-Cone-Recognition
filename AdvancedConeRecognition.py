@@ -57,7 +57,6 @@ class AdvancedConeRecognition:
                 for (clazz, probability, (x, y, w, h)) in detections:
 
                     (x1, y1, x2, y2) = self.darknet_recognition.to_usable(x, y, w, h)
-
                     x = int(x)
                     y = int(y)
                     w = int(w)
@@ -71,7 +70,7 @@ class AdvancedConeRecognition:
                         color = [int(c) for c in self.COLORS[clazz]]
                         cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                         cv2.circle(frame, (x, y), 10, color, -1)
-                        text = "{}: {:.4f}".format(self.LABELS[clazz], probability)
+                        text = "{}: {:.2f}".format(self.LABELS[clazz], probability)
                         cv2.putText(frame, text, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
             if render:
@@ -90,4 +89,4 @@ class AdvancedConeRecognition:
 
 if __name__ == '__main__':
     advanced_cone_recognition = AdvancedConeRecognition()
-    advanced_cone_recognition.start(render=True, verbose=False)
+    advanced_cone_recognition.start(render=True, verbose=True)
