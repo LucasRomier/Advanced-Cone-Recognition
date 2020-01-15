@@ -8,13 +8,18 @@ import cv2
 import numpy
 # from OpenCVRecognition import OpenCVRecognition
 from DarknetRecognition import DarknetRecognition
+from SimpleDistanceCalculation import SimpleDistanceCalculation
 import os
 
 
 class AdvancedConeRecognition:
     videoCapture = None
     running = False
+
+    # openCV_recognition = None
     darknet_recognition = None
+
+    distance_calculation = None
 
     def __init__(self):
         cwd = os.path.dirname(__file__)
@@ -38,6 +43,8 @@ class AdvancedConeRecognition:
         if self.videoCapture.isOpened():
             self.img_w = self.videoCapture.get(cv2.CAP_PROP_FRAME_WIDTH)  # float
             self.img_h = self.videoCapture.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float
+
+        self.distance_calculation = SimpleDistanceCalculation(228.0, 325.0, -11111111111111111111111111111)  # TODO: Change to proper value, then calculate dist and angle
 
     def start(self, render=False, verbose=False):
         self.running = True
