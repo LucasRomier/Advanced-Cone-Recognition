@@ -6,7 +6,8 @@ Author: Lucas Romier
 
 import cv2
 import numpy
-from OpenCVRecognition import OpenCVRecognition
+# from OpenCVRecognition import OpenCVRecognition
+from DarknetRecognition import DarknetRecognition
 import os
 
 
@@ -30,7 +31,8 @@ class AdvancedConeRecognition:
         numpy.random.seed(42)
         self.COLORS = numpy.random.randint(0, 255, size=(len(self.LABELS), 3), dtype="uint8")
 
-        self.darknet_recognition = OpenCVRecognition(cfg_path, weight_path)
+        # self.openCV_recognition = OpenCVRecognition(cfg_path, weight_path)
+        self.darknet_recognition = DarknetRecognition(dll_path, cfg_path, weight_path)
         self.videoCapture = cv2.VideoCapture(0)
 
     def start(self, render=False, verbose=False):
@@ -42,24 +44,25 @@ class AdvancedConeRecognition:
             if not grabbed:
                 break
 
-            (idxs, boxes, confidences, class_ids) = self.darknet_recognition.predict_boxes(frame)
+            # detections = self.openCV_recognition.predict_boxes(frame)
+            detections = self.darknet_recognition.predict_boxes(frame, len(self.LABELS))
 
             # ensure at least one detection exists
-            if len(idxs) > 0:
+            if len(detections) > 0:
                 # loop over the indexes we are keeping
-                for i in idxs.flatten():
-                    # extract the bounding box coordinates
-                    (x, y) = (boxes[i][0], boxes[i][1])
-                    (w, h) = (boxes[i][2], boxes[i][3])
-
+                for (clazz, probability, (x, y, w, h)) in detections:
+                    x = int(x)
+                    y = int(y)
+                    w = int(w)
+                    h = int(h)
                     if verbose:
-                        print(x, y, w, h, self.LABELS[class_ids[i]])
+                        print(x, y, w, h, self.LABELS[clazz])
 
                     if render:
                         # draw a bounding box rectangle and label on the frame
-                        color = [int(c) for c in self.COLORS[class_ids[i]]]
+                        color = [int(c) for c in self.COLORS[clazz]]
                         cv2.rectangle(frame, (x, y), (x + w, y + h), color, 2)
-                        text = "{}: {:.4f}".format(self.LABELS[class_ids[i]], confidences[i])
+                        text = "{}: {:.4f}".format(self.LABELS[clazz], probability)
                         cv2.putText(frame, text, (x, y - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
 
             if render:

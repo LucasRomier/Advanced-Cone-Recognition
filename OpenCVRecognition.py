@@ -47,7 +47,7 @@ class OpenCVRecognition:
 
                 """ Only consider recognitions above certain threshold """
                 if confidence > threshold:
-                    """ Scale bounding box back to readable format """
+                    """ Scale bounding box to YOLO format """
                     box = detection[0:4] * numpy.array([self.W, self.H, self.W, self.H])
                     (centerX, centerY, width, height) = box.astype("int")
 
@@ -61,4 +61,11 @@ class OpenCVRecognition:
         """ Non-maxima-suppression to overlapping boxes """
         idxs = cv2.dnn.NMSBoxes(boxes, confidences, threshold, hier_threshold)
 
-        return idxs, boxes, confidences, class_ids
+        ret = []
+        if len(idxs) > 0:
+            for i in idxs.flatten():
+                (x, y) = (boxes[i][0], boxes[i][1])
+                (w, h) = (boxes[i][2], boxes[i][3])
+                ret.append((class_ids[i], confidences[i], (x, y, w, h)))
+
+        return ret
