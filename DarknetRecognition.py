@@ -159,7 +159,7 @@ class DarknetRecognition:
         return x1, y1, x2, y2
 
     """ threshold is value for valid detection. hier_threshold determines how specific the result is. nms takes care of overlapping boxes """
-    def predict_boxes(self, frame, classes_count, threshold=0.45, hier_threshold=0.7, nms=0.45):
+    def predict_boxes(self, frame, classes_count, threshold=0.4, hier_threshold=0.2, nms=0.45):
         """ Extract data from frame and convert to array """
         rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         image, array = self.__array_to_image(rgb_frame)
